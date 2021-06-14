@@ -1,6 +1,7 @@
 package tcprelay
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"log"
@@ -31,7 +32,12 @@ func (s *tcpRelayServer) Listen() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("server is listening on address %s\n", s.addr)
+	log.Printf("middle server is listening on address %s\n", s.addr)
+	err = s.target.Prepare()
+	if err != nil {
+		log.Printf("target server is not ready: %+v", err)
+		return
+	}
 
 	for {
 		client, err := l.Accept()
@@ -39,6 +45,7 @@ func (s *tcpRelayServer) Listen() {
 			log.Println(err)
 			continue
 		}
+		log.Printf("client connected from %s\n", client.RemoteAddr().String())
 		go handleConnection(client, s.target)
 	}
 }
@@ -52,36 +59,37 @@ func handleConnection(client net.Conn, target TcpRelayTargetServer) {
 		return
 	}
 
-	buffer := make([]byte, 4096)
-	log.Printf("start transmission\n")
-	n, err := CopyBuffer(target.Conn(), client, buffer)
+	err = copy(target.Conn(), client)
 	if err != nil {
 		log.Printf("error when send data by client: %+v\n", err)
 		return
 	}
-	log.Printf("tarnsmit data by client: %d %s\n", n, buffer[:n])
-		
-	n, err = CopyBuffer(client, target.Conn(), buffer)
+
+	err = copy(client, target.Conn())
 	if err != nil {
 		log.Printf("error when send data back to client: %+v\n", err)
 		return
 	}
-	log.Printf("receive data from target server: %d %s\n", n, buffer[:n])
 }
 
-func CopyBuffer(dst io.Writer, src io.Reader, buf []byte) (written int64, err error) {
-	if buf != nil && len(buf) == 0 {
-		panic("empty buffer in copyBuffer")
+func copy(dst net.Conn, src net.Conn) (err error) {
+	r := bufio.NewReader(src)
+	w := bufio.NewWriter(dst)
+	buf := make([]byte, 4096)
+
+	buf[0], err = r.ReadByte()
+	if err != nil {
+		return err
+	}
+	err = w.WriteByte(buf[0])
+	if err != nil {
+		return err
 	}
 
-	for {
-		nr, er := src.Read(buf)
-		log.Printf("readed %d, %s\n", nr, buf[:nr])
+	for r.Buffered() > 0 {
+		nr, er := r.Read(buf[:])
 		if nr > 0 {
-			nw, ew := dst.Write(buf[0:nr])
-			if nw > 0 {
-				written += int64(nw)
-			}
+			nw, ew := w.Write(buf[:nr])
 			if ew != nil {
 				err = ew
 				break
@@ -98,5 +106,6 @@ func CopyBuffer(dst io.Writer, src io.Reader, buf []byte) (written int64, err er
 			break
 		}
 	}
-	return written, err
+	w.Flush()
+	return err
 }
