@@ -17,12 +17,24 @@ func NewRelayTarget(addr string) *relayTarget {
 	}
 }
 
-func (t *relayTarget) Setup() error {
+func (t *relayTarget) Prepare() error {
+	return nil
+}
+
+func (t *relayTarget) Dial() error {
 	conn, err := net.Dial("tcp4", t.addr)
 	if err != nil {
 		return err
 	}
 	t.conn = conn
+	return nil
+}
+
+func (t *relayTarget) Close() error {
+	err := t.conn.Close()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

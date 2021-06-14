@@ -8,7 +8,9 @@ import (
 )
 
 type TcpRelayTargetServer interface {
-	Setup() error
+	Prepare() error
+	Dial() error
+	Close() error
 	Conn() net.Conn
 }
 
@@ -17,10 +19,10 @@ type tcpRelayServer struct {
 	target TcpRelayTargetServer
 }
 
-func NewTcpRelayServer(port int, targetAddr string) *tcpRelayServer {
+func NewTcpRelayServer(port int, target TcpRelayTargetServer) *tcpRelayServer {
 	return &tcpRelayServer{
 		addr:   fmt.Sprintf(":%d", port),
-		target: NewRelayTarget(targetAddr),
+		target: target,
 	}
 }
 
@@ -44,9 +46,9 @@ func (s *tcpRelayServer) Listen() {
 func handleConnection(client net.Conn, target TcpRelayTargetServer) {
 	defer client.Close()
 
-	err := target.Setup()
+	err := target.Dial()
 	if err != nil {
-		log.Printf("%+v\n", err)
+		log.Printf("can't dial target server: %+v\n", err)
 		return
 	}
 
