@@ -4,5 +4,8 @@ server:
 client:
 	go run cmd/client/main.go
 
+echo-client:
+	go run cmd/echo-client/main.go
 
-.PHONY: server client
+
+.PHONY: server client echo-client
