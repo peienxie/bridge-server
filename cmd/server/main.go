@@ -2,6 +2,7 @@ package main
 
 import (
 	"tcprelay"
+	"tcprelay/relaytarget"
 )
 
 var (
@@ -11,7 +12,7 @@ var (
 func main() {
 	s := tcprelay.NewTcpRelayServer(
 		MIDDLE_SERVER_PORT,
-		tcprelay.NewRelayTarget("18.235.124.214:80"),
+		relaytarget.NewRelayTarget("18.235.124.214:80"),
 	)
 	s.Listen()
 

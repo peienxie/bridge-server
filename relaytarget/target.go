@@ -1,4 +1,4 @@
-package tcprelay
+package relaytarget
 
 import (
 	"net"
