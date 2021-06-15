@@ -7,5 +7,10 @@ client:
 echo-client:
 	go run cmd/echo-client/main.go
 
+build:
+	go build -o bin/server.exe cmd/server/main.go
 
-.PHONY: server client echo-client
+clean:
+	rm -rf bin/
+
+.PHONY: server client echo-client build clean
