@@ -69,7 +69,10 @@ func (s *tcpRelayServer) Listen() {
 }
 
 func handleConnection(client net.Conn, target TcpRelayTargetServer) {
-	defer client.Close()
+	defer func() {
+		log.Println("closing client connection")
+		client.Close()
+	}()
 
 	err := target.Dial()
 	if err != nil {
