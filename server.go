@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"time"
 )
 
 type TcpRelayTargetServer interface {
@@ -93,6 +94,8 @@ func handleConnection(client net.Conn, target TcpRelayTargetServer) {
 }
 
 func copy(dst net.Conn, src net.Conn) (err error) {
+	src.SetReadDeadline(time.Now().Add(time.Second * 10))
+
 	r := bufio.NewReader(src)
 	w := bufio.NewWriter(dst)
 	buf := make([]byte, 1024)
