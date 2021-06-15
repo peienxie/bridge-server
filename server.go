@@ -2,6 +2,7 @@ package tcprelay
 
 import (
 	"bufio"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
@@ -58,13 +59,16 @@ func handleConnection(client net.Conn, target TcpRelayTargetServer) {
 		log.Printf("can't dial target server: %+v\n", err)
 		return
 	}
+	log.Println("successfully dial target server", target.Conn().RemoteAddr().String())
 
+	log.Printf("%s ==========> %s\n", client.RemoteAddr().String(), target.Conn().RemoteAddr().String())
 	err = copy(target.Conn(), client)
 	if err != nil {
 		log.Printf("error when send data by client: %+v\n", err)
 		return
 	}
 
+	log.Printf("%s <========== %s\n", client.RemoteAddr().String(), target.Conn().RemoteAddr().String())
 	err = copy(client, target.Conn())
 	if err != nil {
 		log.Printf("error when send data back to client: %+v\n", err)
@@ -75,23 +79,26 @@ func handleConnection(client net.Conn, target TcpRelayTargetServer) {
 func copy(dst net.Conn, src net.Conn) (err error) {
 	r := bufio.NewReader(src)
 	w := bufio.NewWriter(dst)
-	buf := make([]byte, 4096)
+	buf := make([]byte, 1024)
+	data := make([]byte, 0)
 
 	buf[0], err = r.ReadByte()
 	if err != nil {
-		return err
+		return fmt.Errorf("read first byte error: %+v\n", err)
 	}
+	data = append(data, buf[0])
 	err = w.WriteByte(buf[0])
 	if err != nil {
-		return err
+		return fmt.Errorf("write first byte error: %+v\n", err)
 	}
 
 	for r.Buffered() > 0 {
 		nr, er := r.Read(buf[:])
+		data = append(data, buf[:nr]...)
 		if nr > 0 {
 			nw, ew := w.Write(buf[:nr])
 			if ew != nil {
-				err = ew
+				err = fmt.Errorf("write data error: %+v\n", ew)
 				break
 			}
 			if nr != nw {
@@ -101,11 +108,12 @@ func copy(dst net.Conn, src net.Conn) (err error) {
 		}
 		if er != nil {
 			if er != io.EOF {
-				err = er
+				err = fmt.Errorf("read data error: %+v\n", er)
 			}
 			break
 		}
 	}
+	log.Printf("transmitted packet length:%d\n%s\n", len(data), hex.EncodeToString(data))
 	w.Flush()
 	return err
 }
