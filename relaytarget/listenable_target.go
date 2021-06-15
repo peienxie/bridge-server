@@ -22,25 +22,31 @@ func NewListenableRelayTarget(port int, tlsConfig *tls.Config) *listenableRelayT
 }
 
 func (t *listenableRelayTarget) Prepare() error {
-	log.Printf("target server is listening on address %s\n", t.addr)
 	l, err := net.Listen("tcp4", t.addr)
 	if err != nil {
 		return err
 	}
+	log.Printf("target server is listening on address %s\n", t.addr)
 	go func() {
-		conn, err := l.Accept()
-		if err != nil {
-			return
+		for {
+			conn, err := l.Accept()
+			log.Printf("target server is connected from %s\n", conn.RemoteAddr().String())
+			if err != nil {
+				return
+			}
+			if t.client != nil {
+				t.client.Close()
+			}
+			t.client = conn
 		}
-		if t.client != nil {
-			t.client.Close()
-		}
-		t.client = conn
 	}()
 	return nil
 }
 
 func (t *listenableRelayTarget) Dial() error {
+	if t.client == nil {
+		return fmt.Errorf("target server is not ready")
+	}
 	return nil
 }
 
