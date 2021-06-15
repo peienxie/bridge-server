@@ -1,19 +1,20 @@
 package relaytarget
 
 import (
+	"crypto/tls"
 	"net"
 )
 
-
 type relayTarget struct {
-	addr string
-	conn net.Conn
+	addr      string
+	conn      net.Conn
+	tlsConfig *tls.Config
 }
 
-
-func NewRelayTarget(addr string) *relayTarget {
+func NewRelayTarget(addr string, tlsConfig *tls.Config) *relayTarget {
 	return &relayTarget{
-		addr : addr,
+		addr: addr,
+		tlsConfig: tlsConfig,
 	}
 }
 
@@ -22,7 +23,13 @@ func (t *relayTarget) Prepare() error {
 }
 
 func (t *relayTarget) Dial() error {
-	conn, err := net.Dial("tcp4", t.addr)
+	var conn net.Conn
+	var err error
+	if t.tlsConfig != nil {
+		conn, err = tls.Dial("tcp4", t.addr, t.tlsConfig)
+	} else {
+		conn, err = net.Dial("tcp4", t.addr)
+	}
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"log"
 	"strconv"
@@ -11,16 +12,20 @@ import (
 )
 
 type Config struct {
-	MiddleServerPort int
-	TargetServerIp   string
-	TargetServerPort int
+	MiddleServerPort    int
+	SecuredMiddleServer bool
+	TargetServerIp      string
+	TargetServerPort    int
+	SecuredTargetServer bool
 }
 
 func (c Config) String() string {
-	return fmt.Sprintf("MiddleServerPort: %d\nTargetServerIp: %s\nTargetServerPort: %d\n",
+	return fmt.Sprintf("MiddleServerPort: %d\nSecuredMiddleServer: %v\nTargetServerIp: %s\nTargetServerPort: %d\nSecuredTargetServer: %v\n",
 		c.MiddleServerPort,
+		c.SecuredMiddleServer,
 		c.TargetServerIp,
 		c.TargetServerPort,
+		c.SecuredTargetServer,
 	)
 }
 
@@ -49,11 +54,36 @@ func init() {
 	fmt.Printf("using configuration below:\n%s\n", appConfig)
 }
 
+func setupMiddleServerTLSConfig() *tls.Config {
+	if !appConfig.SecuredMiddleServer {
+		return nil
+	}
+
+	cert, err := tls.LoadX509KeyPair("certs/server.crt", "certs/server.key")
+	if err != nil {
+		log.Fatal(err)
+	}
+	return &tls.Config{Certificates: []tls.Certificate{cert}}
+}
+
+func setupTargetServerTLSConfig() *tls.Config {
+	if !appConfig.SecuredTargetServer {
+		return nil
+	}
+
+	return &tls.Config{InsecureSkipVerify: true}
+}
+
 func main() {
+
 	s := tcprelay.NewTcpRelayServer(
 		appConfig.MiddleServerPort,
-		relaytarget.NewRelayTarget(fmt.Sprintf("%s:%d", appConfig.TargetServerIp, appConfig.TargetServerPort)),
+		relaytarget.NewRelayTarget(
+			fmt.Sprintf("%s:%d", appConfig.TargetServerIp, appConfig.TargetServerPort),
+			setupTargetServerTLSConfig(),
+		),
 		// relaytarget.NewListenableRelayTarget(8089),
+		setupMiddleServerTLSConfig(),
 	)
 	s.Listen()
 

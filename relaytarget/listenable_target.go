@@ -1,20 +1,23 @@
 package relaytarget
 
 import (
+	"crypto/tls"
 	"fmt"
 	"log"
 	"net"
 )
 
 type listenableRelayTarget struct {
-	addr   string
-	conn   net.Conn
-	client net.Conn
+	addr      string
+	conn      net.Conn
+	client    net.Conn
+	tlsConfig *tls.Config
 }
 
-func NewListenableRelayTarget(port int) *listenableRelayTarget {
+func NewListenableRelayTarget(port int, tlsConfig *tls.Config) *listenableRelayTarget {
 	return &listenableRelayTarget{
-		addr: fmt.Sprintf(":%d", port),
+		addr:      fmt.Sprintf(":%d", port),
+		tlsConfig: tlsConfig,
 	}
 }
 

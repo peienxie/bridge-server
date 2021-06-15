@@ -2,6 +2,7 @@ package tcprelay
 
 import (
 	"bufio"
+	"crypto/tls"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -19,21 +20,36 @@ type TcpRelayTargetServer interface {
 type tcpRelayServer struct {
 	addr   string
 	target TcpRelayTargetServer
+	tlsCfg *tls.Config
 }
 
-func NewTcpRelayServer(port int, target TcpRelayTargetServer) *tcpRelayServer {
+func NewTcpRelayServer(port int, target TcpRelayTargetServer, tlsCfg *tls.Config) *tcpRelayServer {
 	return &tcpRelayServer{
 		addr:   fmt.Sprintf(":%d", port),
 		target: target,
+		tlsCfg: tlsCfg,
 	}
 }
 
+func (s *tcpRelayServer) listener() (l net.Listener, err error) {
+	if s.tlsCfg != nil {
+		l, err = tls.Listen("tcp", s.addr, s.tlsCfg)
+		log.Printf("using TLS connection\n")
+	} else {
+		l, err = net.Listen("tcp4", s.addr)
+	}
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("middle server is listening on address %s\n", s.addr)
+	return l, nil
+}
+
 func (s *tcpRelayServer) Listen() {
-	l, err := net.Listen("tcp4", s.addr)
+	l, err := s.listener()
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("middle server is listening on address %s\n", s.addr)
 	err = s.target.Prepare()
 	if err != nil {
 		log.Printf("target server is not ready: %+v", err)
