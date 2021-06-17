@@ -80,19 +80,22 @@ func handleConnection(client net.Conn, target TcpRelayTargetServer) {
 		return
 	}
 	log.Println("successfully dial target server", target.Conn().RemoteAddr().String())
+	log.Printf("\nstart exchange message\n")
 
-	log.Printf("%s ==========> %s\n", client.RemoteAddr().String(), target.Conn().RemoteAddr().String())
-	err = copy(target.Conn(), client)
-	if err != nil {
-		log.Printf("error when send data by client: %+v\n", err)
-		return
-	}
+	for {
+		log.Printf("\n%s ==========> %s\n", client.RemoteAddr().String(), target.Conn().RemoteAddr().String())
+		err = copy(target.Conn(), client)
+		if err != nil {
+			log.Printf("error when send data by client: %+v\n", err)
+			return
+		}
 
-	log.Printf("%s <========== %s\n", client.RemoteAddr().String(), target.Conn().RemoteAddr().String())
-	err = copy(client, target.Conn())
-	if err != nil {
-		log.Printf("error when send data back to client: %+v\n", err)
-		return
+		log.Printf("%s <========== %s\n", client.RemoteAddr().String(), target.Conn().RemoteAddr().String())
+		err = copy(client, target.Conn())
+		if err != nil {
+			log.Printf("error when send data back to client: %+v\n", err)
+			return
+		}
 	}
 }
 
