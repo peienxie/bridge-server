@@ -14,6 +14,7 @@ certs:
 
 build:
 	go build -o bin/server.exe cmd/server/main.go
+	cp config.ini bin/config.ini
 
 clean:
 	rm -rf bin/
