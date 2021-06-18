@@ -100,7 +100,7 @@ func handleConnection(client net.Conn, target TcpRelayTargetServer) {
 }
 
 func copy(dst net.Conn, src net.Conn) (err error) {
-	src.SetReadDeadline(time.Now().Add(time.Second * 10))
+	src.SetReadDeadline(time.Now().Add(time.Second * 30))
 
 	r := bufio.NewReader(src)
 	w := bufio.NewWriter(dst)
