@@ -8,23 +8,17 @@ import (
 	"io"
 	"log"
 	"net"
+	"tcprelay/relaytarget"
 	"time"
 )
 
-type TcpRelayTargetServer interface {
-	Prepare() error
-	Dial() error
-	Close() error
-	Conn() net.Conn
-}
-
 type tcpRelayServer struct {
 	addr   string
-	target TcpRelayTargetServer
+	target relaytarget.TcpRelayTarget
 	tlsCfg *tls.Config
 }
 
-func NewTcpRelayServer(port int, target TcpRelayTargetServer, tlsCfg *tls.Config) *tcpRelayServer {
+func NewTcpRelayServer(port int, target relaytarget.TcpRelayTarget, tlsCfg *tls.Config) *tcpRelayServer {
 	return &tcpRelayServer{
 		addr:   fmt.Sprintf(":%d", port),
 		target: target,
@@ -68,7 +62,7 @@ func (s *tcpRelayServer) Listen() {
 	}
 }
 
-func handleConnection(client net.Conn, target TcpRelayTargetServer) {
+func handleConnection(client net.Conn, target relaytarget.TcpRelayTarget) {
 	defer func() {
 		log.Println("closing client connection")
 		client.Close()

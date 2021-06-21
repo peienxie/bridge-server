@@ -14,9 +14,9 @@ type listenableRelayTarget struct {
 	tlsConfig *tls.Config
 }
 
-func NewListenableRelayTarget(port int, tlsConfig *tls.Config) *listenableRelayTarget {
+func NewListenableRelayTarget(addr string, tlsConfig *tls.Config) *listenableRelayTarget {
 	return &listenableRelayTarget{
-		addr:      fmt.Sprintf(":%d", port),
+		addr:      addr,
 		tlsConfig: tlsConfig,
 	}
 }
