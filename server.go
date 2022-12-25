@@ -74,6 +74,7 @@ func handleConnection(client net.Conn, target relaytarget.TcpRelayTarget) {
 		return
 	}
 	log.Printf("successfully dial target server %s\n\n", target.Conn().RemoteAddr().String())
+	defer target.Close()
 
 	for {
 		var data []byte
