@@ -11,7 +11,7 @@ import (
 type Config struct {
 	MiddleServerPort    int
 	SecuredMiddleServer bool
-	RelayTargetType           RelayTargetType
+	RelayTargetType     RelayTargetType
 	RelayTargetAddress  string
 	SecuredRelayTarget  bool
 }

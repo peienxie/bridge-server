@@ -13,7 +13,7 @@ type relayTarget struct {
 
 func NewRelayTarget(addr string, tlsConfig *tls.Config) *relayTarget {
 	return &relayTarget{
-		addr: addr,
+		addr:      addr,
 		tlsConfig: tlsConfig,
 	}
 }

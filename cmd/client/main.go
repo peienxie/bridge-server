@@ -10,13 +10,13 @@ import (
 )
 
 var (
-	DEFAULT_SERVER_IP = "127.0.0.1"
+	DEFAULT_SERVER_IP   = "127.0.0.1"
 	DEFAULT_SERVER_PORT = 18101
 )
 
 func main() {
 	ip := flag.String("ip", DEFAULT_SERVER_IP, "server IP address")
-    port := flag.Int("port", DEFAULT_SERVER_PORT, "server port number")
+	port := flag.Int("port", DEFAULT_SERVER_PORT, "server port number")
 
 	err := runClient(fmt.Sprintf("%s:%d", *ip, *port))
 	if err != nil {

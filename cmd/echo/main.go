@@ -56,38 +56,38 @@ func (c *client) write() {
 }
 
 var (
-	remoteIPAddr *string
+	remoteIPAddr  *string
 	remotePortNum *int
-	localPortNum *int
+	localPortNum  *int
 )
 
 var (
-	errInvalidCommand = fmt.Errorf("unknwon command, should be either listen or connect")
+	errInvalidCommand    = fmt.Errorf("unknwon command, should be either listen or connect")
 	errInvliadPortNumber = fmt.Errorf("invalid port number provided")
-	errInvalidIPAddress = fmt.Errorf("invalid ip address provided")
+	errInvalidIPAddress  = fmt.Errorf("invalid ip address provided")
 )
 
 func main() {
 	listenArgs := flag.NewFlagSet("listen", flag.ExitOnError)
 	connectArgs := flag.NewFlagSet("connect", flag.ExitOnError)
-	
+
 	localPortNum = listenArgs.Int("port", 0, "local host port number would be listening on")
 
 	remoteIPAddr = connectArgs.String("ip", "", "remote host IP address")
 	remotePortNum = connectArgs.Int("port", 0, "remote host port number")
-	
-    if len(os.Args) < 2 {
+
+	if len(os.Args) < 2 {
 		log.Fatal(errInvalidCommand)
-    }
+	}
 	switch os.Args[1] {
-    case "listen":
-        listenArgs.Parse(os.Args[2:])
-    case "connect":
-        connectArgs.Parse(os.Args[2:])
-    default:
+	case "listen":
+		listenArgs.Parse(os.Args[2:])
+	case "connect":
+		connectArgs.Parse(os.Args[2:])
+	default:
 		log.Fatal(errInvalidCommand)
-    }
-	
+	}
+
 	if listenArgs.Parsed() {
 		if *localPortNum == 0 {
 			log.Fatal(errInvliadPortNumber)
@@ -106,7 +106,7 @@ func main() {
 			go handleConnection(conn)
 		}
 	}
-	
+
 	if connectArgs.Parsed() {
 		if *remoteIPAddr == "" {
 			connectArgs.PrintDefaults()
